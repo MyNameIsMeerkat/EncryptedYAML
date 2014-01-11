@@ -49,5 +49,4 @@ module written by Michael Gilfix <mgilfix@eecs.tufts.edu> included along side th
 
 
 ##License
-`EncryptedYAML` is released under the XX license, feel free to use it as you see fit!
-
+`EncryptedYAML` is released under the [LGPL](http://www.gnu.org/licenses/lgpl.html) license.

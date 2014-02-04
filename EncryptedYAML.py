@@ -16,11 +16,11 @@
 #
 # This *DOES NOT* offer any level of in-memory protection of the objects during
 # or after encryption / decryption.
-#
 
 __author__ = "Rich Smith"
 __version__ = "0.1"
 
+import sys
 import types
 
 try:
@@ -101,7 +101,6 @@ def _decrypt_yaml(e_yaml_stream, key):
         bfish = Blowfish(key)
         bfish.initCTR()
         yaml_data = bfish.decryptCTR(e_yaml_data)
-
     except Exception, err:
         raise EncryptedYamlException("Problem decrypting the YAML file - %s"%(err))
 
@@ -163,8 +162,9 @@ def safe_load_all(stream, key = None):
 
 def dump_all(documents, stream = None, Dumper = yaml.dumper.Dumper, key = None,  **kwargs):
     """
-    Serialize a sequence of Python objects into a YAML stream & if a key is specified encrypt it.
-    If stream is None, return the produced string instead.
+    Serialize a sequence of Python objects into a YAML stream & if a key is specified encrypt the resulting stream.
+    If a stream was passed write the resulting yaml object to that stream, if stream is None, return the produced string
+    instead.
     """
     all_yaml = ""
 
@@ -226,11 +226,10 @@ def safe_dump_all(documents, stream = None, key = None, **kwargs):
     return dump_all(documents, stream, key, Dumper = yaml.dumper.SafeDumper, **kwargs)
 
 
-if __name__ == "__main__":
+def __test():
     """
-    Call main code
+    Perform some tests
     """
-    ##Perform some tests
     print "[!] Testing EncryptedYaml..."
 
     import tempfile
@@ -288,3 +287,113 @@ if __name__ == "__main__":
     print "[+] Encrypted File Load:",ret
 
     print "[!] Done."
+
+
+def __clear2encrypted(input_f, output_f):
+    """
+    Take a clear YAML file, parse it, encrypt it and dump crypted data to specified file
+    """
+    ##Open cleartext yaml file
+    try:
+        config_f_obj = open(input_f, "rb")
+    except Exception, err:
+        print "[-] Error opening specified file '%s' - "%(input_f, err)
+        return False
+
+    key = getpass.getpass("Please enter a key for the encryption (8 chars or longer): ")
+
+    ##Parse the data to a yaml object
+    try:
+        y_data = yaml.load(config_f_obj)
+    except Exception, err:
+        print "[-] Problem parsing specified YAML file - %s"%(err)
+        config_f_obj.close()
+        return False
+
+    config_f_obj.close()
+
+    ##Now pass that yaml object to the crypto dumper and have it encrypted and written to disk
+    try:
+        output_f_obj = open(output_f, "wb")
+        ret = dump(y_data, stream = output_f_obj, key = key)
+    except Exception, err:
+        print "[-] Error opening/encrypting specified file '%s' - %s"%(output_f, err)
+        return False
+
+
+    output_f_obj.close()
+
+    print "[+] Encrypted YAML file written to: %s"%(output_f)
+
+    return True
+
+
+def __encrypted2clear(input_f, output_f):
+    """
+    Take an encrypted YAML file, decrypt it, parse it and dump clear data to specified file
+    """
+    try:
+        encrypted_f_obj = open(input_f, "rb")
+    except Exception, err:
+        print "[-] Error opening specified file '%s' - "%(input_f, err)
+        return False
+
+    key = getpass.getpass("Please enter a key for the decryption (8 chars or longer): ")
+
+    try:
+        d_data = load(encrypted_f_obj, key = key)
+    except Exception, err:
+        print "[-] Problem decrypting YAML stream (check the supplied key is correct) - %s"%(err)
+        encrypted_f_obj.close()
+        return False
+
+    encrypted_f_obj.close()
+
+    try:
+        output_f_obj = open(output_f, "wb")
+        ret = yaml.dump(d_data, stream = output_f_obj, default_flow_style=False)
+    except Exception, err:
+        print "[-] Error opening/dumping specified file '%s' - %s"%(output_f, err)
+        return False
+
+
+    output_f_obj.close()
+
+    print "[+] Decrypted YAML file written to: %s"%(output_f)
+
+    return True
+
+
+if __name__ == "__main__":
+    """
+    Super basic encrypt / decrypt / test functionality
+    """
+    import getpass
+
+    def usage():
+        print "Usage: %s [option] [arg]"%(sys.argv[0])
+        print "Options:"
+        print "\te <yaml filename> <encrypted yaml filename> - encrypt yaml config file (will prompt for key)"
+        print "\td <encrypted yaml filename> <yaml file> - decrypt yaml config file"
+        print "\tt - Run some tests"
+
+    if len(sys.argv) < 2:
+        usage()
+        sys.exit(-1)
+
+
+    elif sys.argv[1] == "t":
+        __test()
+
+    elif sys.argv[1] == "e":
+        __clear2encrypted(sys.argv[2], sys.argv[3])
+
+    elif sys.argv[1] == "d":
+        __encrypted2clear(sys.argv[2], sys.argv[3])
+
+    else:
+        usage()
+        sys.exit(-1)
+
+
+    sys.exit(0)

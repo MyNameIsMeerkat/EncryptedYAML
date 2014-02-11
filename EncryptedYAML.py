@@ -342,6 +342,7 @@ def __encrypted2clear(input_f, output_f):
 
     try:
         d_data = load(encrypted_f_obj, key = key)
+	print type(d_data)
     except Exception, err:
         print "[-] Problem decrypting YAML stream (check the supplied key is correct) - %s"%(err)
         encrypted_f_obj.close()
@@ -397,3 +398,4 @@ if __name__ == "__main__":
 
 
     sys.exit(0)
+

@@ -12,6 +12,27 @@ no in-memory protection of either the key or the decrypted YAML data. If the pro
 cleartext representations of the key and YAML data will be easily obtainable.
 
 ##Simple Usage
+`EncryptedYAML` provides a very simple commandline interface to convert between encrypted and decrypted versions of a YAML file. 
+ 
+To take a cleartext YAML file and produce an encrypted version of it, simply do:
+
+ ```
+ EncryptedYAML.py e <cleartext_config_source.yaml> <encrypted_config_dest.yaml>
+ ```
+You will then be prompted to enter a password to secure the encrypted file **Note: The password must be more than 8 characterss in length**
+
+**Once encrypted and you are happy remember to securely delete the cleartext original (*and remember the password!*)**
+ 
+
+To take an encrypted YAML file and decrypt it (to allow it to be edited etc.), simply do:
+
+ ```
+ EncryptedYAML.py d <encrypted_config_source.yaml> <cleartext_config_dest.yaml>
+ ```
+ Again you will be prompted for the password in order to decrypt the file.
+
+
+##Programatic Usage
 
 `EncryptedYAML` is compatible with [PyYAML](http://pyyaml.org) and if the `key` argument is not supplied
 to an `EncryptedYAML` function it will work identically to `PyYAML`. If a `key` argument is supplied then
